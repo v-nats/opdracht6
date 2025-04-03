@@ -182,7 +182,7 @@ initOrbs();
 function loop() {
   window.requestAnimFrame(loop);
   if (trail) {
-    ctx.fillStyle = 'rgba(0,0,0,0.1)';
+    ctx.fillStyle = '	#222222';
     ctx.fillRect(0, 0, cw, ch);
   } else {
     ctx.clearRect(0, 0, cw, ch);
