@@ -164,7 +164,7 @@ function toggleTrails() {
 function clearCanvas() {
   orbs = [];
   particles = [];
-  ctx.fillStyle = 'black';
+  ctx.fillStyle = '#000000';
   ctx.fillRect(0, 0, cw, ch);
   initOrbs();
   createFaces();
@@ -208,7 +208,7 @@ function drawFaces() {
 function loop() {
   window.requestAnimFrame(loop);
   if (trail) {
-    ctx.fillStyle = '#222222';
+    ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, cw, ch);
   } else {
     ctx.clearRect(0, 0, cw, ch);
