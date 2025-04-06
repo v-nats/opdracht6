@@ -32,6 +32,10 @@ ctx.lineCap = 'round';
 
 let orbs = [];
 let particles = [];
+let faces = [];
+const faceCount = 10;
+const faceRadius = 20;
+
 let isDragging = false;
 const trailCB = document.getElementById('trail');
 let trail = trailCB.checked;
@@ -71,38 +75,7 @@ function createOrb(mx, my) {
     update: function () {
       this.lastX = this.x;
       this.lastY = this.y;
-      const x1 = cw / 2;
-      const y1 = ch / 2;
-      const x2 = this.x;
-      const y2 = this.y;
-      const rise = y1 - y2;
-      const run = x1 - x2;
-      const slope = -(rise / run);
-      let radian = Math.atan(slope);
-      let angleH = Math.floor(radian * (180 / Math.PI));
-      if (x2 < x1 && y2 < y1) {
-        angleH += 180;
-      }
-      if (x2 < x1 && y2 > y1) {
-        angleH += 180;
-      }
-      if (x2 > x1 && y2 > y1) {
-        angleH += 360;
-      }
-      if (y2 < y1 && slope === '-Infinity') {
-        angleH = 90;
-      }
-      if (y2 > y1 && slope === 'Infinity') {
-        angleH = 270;
-      }
-      if (x2 < x1 && slope === '0') {
-        angleH = 180;
-      }
-      if (isNaN(angleH)) {
-        angleH = 0;
-      }
-
-      this.colorAngle = angleH;
+      this.colorAngle = (Math.atan2(this.y - this.centerY, this.x - this.centerX) * 180) / Math.PI + 180;
       this.x = this.centerX + Math.sin(this.angle * -1) * this.radius;
       this.y = this.centerY + Math.cos(this.angle * -1) * this.radius;
       this.angle += this.speed;
@@ -134,14 +107,45 @@ function createParticle(x, y, color) {
   });
 }
 
+function createFaces() {
+  faces = [];
+  for (let i = 0; i < faceCount; i++) {
+    faces.push({
+      x: rand(faceRadius, cw - faceRadius),
+      y: rand(faceRadius, ch - faceRadius),
+    });
+  }
+}
+
 function handleMouseMove(e) {
   const mx = e.pageX - c.offsetLeft;
   const my = e.pageY - c.offsetTop;
+
   if (isDragging) {
     for (let i = 0; i < 5; i++) {
       createParticle(mx, my);
     }
     createOrb(mx, my);
+
+    // Collision detection met gezichtjes
+    faces.forEach((face, index) => {
+      const dx = mx - face.x;
+      const dy = my - face.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance < faceRadius) {
+        for (let i = 0; i < 15; i++) {
+          createParticle(face.x, face.y, 'orange');
+        }
+        faces.splice(index, 1);
+        // Nieuw gezichtje genereren
+        faces.push({
+          x: rand(faceRadius, cw - faceRadius),
+          y: rand(faceRadius, ch - faceRadius),
+        });
+      }
+      
+    });
   }
 }
 
@@ -163,6 +167,7 @@ function clearCanvas() {
   ctx.fillStyle = 'black';
   ctx.fillRect(0, 0, cw, ch);
   initOrbs();
+  createFaces();
 }
 
 c.addEventListener('mousemove', handleMouseMove, false);
@@ -177,16 +182,39 @@ function initOrbs() {
   }
 }
 
-initOrbs();
+function drawFaces() {
+  faces.forEach((face) => {
+    // hoofd
+    ctx.beginPath();
+    ctx.arc(face.x, face.y, faceRadius, 0, Math.PI * 2);
+    ctx.fillStyle = 'yellow';
+    ctx.fill();
+
+    // ogen
+    ctx.fillStyle = 'black';
+    ctx.beginPath();
+    ctx.arc(face.x - 5, face.y - 5, 2, 0, Math.PI * 2);
+    ctx.arc(face.x + 5, face.y - 5, 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // mond
+    ctx.beginPath();
+    ctx.arc(face.x, face.y + 5, 7, 0, Math.PI);
+    ctx.strokeStyle = 'black';
+    ctx.stroke();
+  });
+}
 
 function loop() {
   window.requestAnimFrame(loop);
   if (trail) {
-    ctx.fillStyle = '	#222222';
+    ctx.fillStyle = '#222222';
     ctx.fillRect(0, 0, cw, ch);
   } else {
     ctx.clearRect(0, 0, cw, ch);
   }
+
+  drawFaces();
 
   orbs.forEach((orb) => {
     orb.update();
@@ -200,4 +228,6 @@ function loop() {
   });
 }
 
+initOrbs();
+createFaces();
 loop();
